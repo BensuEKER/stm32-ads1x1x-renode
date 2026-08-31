@@ -1,0 +1,30 @@
+:name: STM32F407VG_ADS1115_sensor
+:description: STM32F407VG + ADS1115 (I2C1) - sensor modeli ile boot testi (Gorev 5)
+
+using sysbus
+
+$name?="STM32F407VG_ADS1115"
+mach create $name
+
+# 1) ONCE C# sensor modelini Renode'a tanit (calisma zamaninda derlenir).
+include @renode-model/ADS1x1x.cs
+
+# 2) Sonra platformu yukle -- platform.repl artik "I2C.ADS1x1x" tipini taniyor.
+machine LoadPlatformDescription @renode/platform.repl
+
+# NOT: Debug klasorundeki .elf dosyanin gercek yolunu buraya yaz.
+$bin?=@/mnt/c/Users/Administrator/Desktop/STM32F407VG_ADS1115/Debug/STM32F407VG_ADS1115.elf
+
+showAnalyzer sysbus.usart1
+
+# 3) Simule edilecek voltaji ayarla -- firmware bu degeri I2C uzerinden okuyacak.
+#    Ornek: 1250mV -> ADS1115, +-2.048V PGA araliginda bu degeri ADC koduna cevirip donecek.
+sysbus.i2c1.ads1x1x SimulatedVoltageMilliVolts 1250
+
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+runMacro $reset
+
+start

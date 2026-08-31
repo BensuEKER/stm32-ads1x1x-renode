@@ -1,0 +1,14 @@
+// renode/platform.repl
+//
+// STM32F407VG + ADS1x1x (I2C1) platform tanimi.
+using "platforms/cpus/stm32f4.repl"
+
+// --------------------------------------------------------------------------
+// Sensor: ADS1115 (ADS1x1x ailesi), I2C1 uzerinde, adres 0x48 (ADDR->GND)
+// --------------------------------------------------------------------------
+// NOT: "I2C.ADS1x1x" sinifinin Renode'a tanitilmis olmasi gerekir -- bu
+// resc script'inde "include @renode-model/ADS1x1x.cs" satiri, bu platform
+// dosyasi yuklenmeden ONCE calistirilmis olmali (bkz. sensor_test.resc).
+ads1x1x: Antmicro.Renode.Peripherals.Sensors.ADS1x1x @ i2c1 0x48
+    variant: "ADS1115"
+

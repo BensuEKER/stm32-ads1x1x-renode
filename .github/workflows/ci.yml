@@ -1,0 +1,97 @@
+name: CI
+
+# Gorev 9 kriteri: "Her push ve pull request isleminde testler otomatik
+# calismali." -- bu yuzden hem push hem pull_request tetikleyicisi var.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  # ------------------------------------------------------------------ #
+  # 1) C Unit Tests -- Gorev 7'deki mock I2C tabanli testler.
+  #    Donanima/Renode'a bagimli DEGIL, bu yuzden en hizli ve en erken
+  #    calisan asama. gcc yeterli, ARM cross-compiler gerekmiyor.
+  # ------------------------------------------------------------------ #
+  unit-tests:
+    name: C Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derle ve calistir
+        run: |
+          cd tests/unit
+          gcc -Wall -Wextra -Werror -I../../firmware/Core/Inc \
+              -o test_runner \
+              ../../firmware/Core/Src/ads1x1x.c mock_i2c.c test_ads1x1x.c -lm
+          ./test_runner
+
+  # ------------------------------------------------------------------ #
+  # 2) Firmware Build -- gercek STM32 hedefi icin ARM cross-compile.
+  #    CubeIDE'nin otomatik urettigi Makefile'i kullanir (proje
+  #    ozelliklerinde "Generate Makefile" acik olmali -- varsayilan budur).
+  # ------------------------------------------------------------------ #
+  firmware-build:
+    name: Firmware Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ARM toolchain kur
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi
+
+      - name: Firmware'i derle
+        run: |
+          cd firmware/Debug
+          make all -j"$(nproc)"
+
+      - name: .elf dosyasini artifact olarak yukle
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-elf
+          path: firmware/Debug/*.elf
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------ #
+  # 3) Renode Integration Tests + Python Tests -- Gorev 8'deki pytest
+  #    tabanli testler. firmware-build'in urettigi .elf'e ihtiyac
+  #    duydugu icin ona bagimli (needs). Renode'un kendi .NET runtime'ini
+  #    tasiyan "portable" surumunu kullaniyoruz -- WSL'de kurdugumuz
+  #    yontemin ayni, CI ortaminda da apt bagimlilik sorunlarindan
+  #    tamamen kacinmis oluyoruz.
+  # ------------------------------------------------------------------ #
+  renode-integration-tests:
+    name: Renode Integration Tests
+    runs-on: ubuntu-latest
+    needs: firmware-build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: .elf artifact'ini indir
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware-elf
+          path: firmware-artifact
+
+      - name: Renode'u kur (portable, .NET dahil)
+        run: |
+          wget -q https://builds.renode.io/renode-latest.linux-portable-dotnet.tar.gz
+          mkdir renode_portable
+          tar xf renode-latest.linux-portable-dotnet.tar.gz -C renode_portable --strip-components=1
+          echo "$PWD/renode_portable" >> "$GITHUB_PATH"
+
+      - name: Python bagimliliklarini kur
+        run: pip install -r python/requirements.txt
+
+      - name: Integration testlerini calistir
+        run: |
+          # .elf dosyasinin gercek adini bul (proje adina gore degisebilir)
+          ELF_FILE=$(find firmware-artifact -name '*.elf' | head -n1)
+          echo "Bulunan .elf: $ELF_FILE"
+          export STM32_ELF="$PWD/$ELF_FILE"
+          cd python
+          pytest -v test_integration.py

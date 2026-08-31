@@ -1,0 +1,9 @@
+// renode/platform_no_sensor.repl
+//
+// platform.repl ile AYNI, sadece ADS1x1x sensoru BAGLI DEGIL.
+// Gorev 8'deki test_sensor_invalid_configuration senaryosu icin:
+// I2C hattinda 0x48 adresinde hicbir cihaz yokken firmware'in
+// iletisim hatasini dogru ele alip almadigini test eder.
+using "platforms/cpus/stm32f4.repl"
+
+// NOT: ads1x1x sensor satiri BILEREK YOK -- I2C1 0x48 adresi bos kalsin.

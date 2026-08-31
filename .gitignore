@@ -1,0 +1,21 @@
+# Derleme ciktilari -- CI bunlari sifirdan uretir, git'e gerek yok.
+# NOT: Debug/makefile ve Debug/*/subdir.mk dosyalarini BILEREK disarida
+# birakmiyoruz (ignore etmiyoruz) -- CI onlari kullanarak derliyor.
+*.o
+*.d
+*.su
+*.cyclo
+*.elf
+*.map
+*.list
+*.bin
+*.hex
+build/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# WSL/Windows kalintilari
+*:Zone.Identifier
