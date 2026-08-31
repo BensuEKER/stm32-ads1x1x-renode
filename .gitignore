@@ -19,3 +19,4 @@ __pycache__/
 
 # WSL/Windows kalintilari
 *:Zone.Identifier
+!objects.list
