@@ -1,0 +1,40 @@
+# project.yml
+#
+# Ceedling configuration for the ads1x1x driver unit tests.
+# Run with:
+#   ceedling test:all
+
+:project:
+  :use_exceptions: FALSE
+  :use_test_preprocessor: :tests
+  :use_auxiliary_dependencies: TRUE
+  :build_root: build/ceedling
+  :test_file_prefix: test_
+  :which_ceedling: gem
+
+:paths:
+  :test:
+    - test/**
+  :source:
+    - lib/ads1x1x/src/**
+  :include:
+    - lib/ads1x1x/inc/**
+  :support:
+    - test/support/**
+
+:defines:
+  :test:
+    - UNITY_INCLUDE_FLOAT
+
+:cmock:
+  :mock_prefix: mock_
+  :when_no_prototypes: :warn
+  :enforce_strict_ordering: TRUE
+  :plugins:
+    - :ignore
+    - :callback
+
+:plugins:
+  :enabled:
+    - report_tests_pretty_stdout
+    - module_generator
