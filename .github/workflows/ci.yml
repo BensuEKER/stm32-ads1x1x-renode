@@ -1,7 +1,5 @@
 name: CI
 
-# Gorev 9 kriteri: "Her push ve pull request isleminde testler otomatik
-# calismali." -- bu yuzden hem push hem pull_request tetikleyicisi var.
 on:
   push:
     branches: ["**"]
@@ -9,61 +7,47 @@ on:
     branches: ["**"]
 
 jobs:
-  # ------------------------------------------------------------------ #
-  # 1) C Unit Tests -- Gorev 7'deki mock I2C tabanli testler.
-  #    Donanima/Renode'a bagimli DEGIL, bu yuzden en hizli ve en erken
-  #    calisan asama. gcc yeterli, ARM cross-compiler gerekmiyor.
-  # ------------------------------------------------------------------ #
   unit-tests:
-    name: C Unit Tests
+    name: C Unit Tests (Ceedling)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Derle ve calistir
-        run: |
-          cd tests/unit
-          gcc -Wall -Wextra -Werror -I../../firmware/Core/Inc \
-              -o test_runner \
-              ../../firmware/Core/Src/ads1x1x.c mock_i2c.c test_ads1x1x.c -lm
-          ./test_runner
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
 
-  # ------------------------------------------------------------------ #
-  # 2) Firmware Build -- gercek STM32 hedefi icin ARM cross-compile.
-  #    CubeIDE'nin otomatik urettigi Makefile'i kullanir (proje
-  #    ozelliklerinde "Generate Makefile" acik olmali -- varsayilan budur).
-  # ------------------------------------------------------------------ #
+      - name: Install Ceedling
+        run: gem install ceedling --no-document
+
+      - name: Run tests
+        run: ceedling test:all
+
   firmware-build:
-    name: Firmware Build
+    name: Firmware Build (CMake)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: ARM toolchain kur
+      - name: Install ARM toolchain and CMake
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi
+          sudo apt-get install -y gcc-arm-none-eabi cmake
 
-      - name: Firmware'i derle
-        run: |
-          cd firmware/Debug
-          make all -j"$(nproc)"
+      - name: Configure
+        run: cmake --preset debug
 
-      - name: .elf dosyasini artifact olarak yukle
+      - name: Build
+        run: cmake --build --preset debug
+
+      - name: Upload .elf as artifact
         uses: actions/upload-artifact@v4
         with:
           name: firmware-elf
-          path: firmware/Debug/*.elf
+          path: build/*.elf
           if-no-files-found: error
 
-  # ------------------------------------------------------------------ #
-  # 3) Renode Integration Tests + Python Tests -- Gorev 8'deki pytest
-  #    tabanli testler. firmware-build'in urettigi .elf'e ihtiyac
-  #    duydugu icin ona bagimli (needs). Renode'un kendi .NET runtime'ini
-  #    tasiyan "portable" surumunu kullaniyoruz -- WSL'de kurdugumuz
-  #    yontemin ayni, CI ortaminda da apt bagimlilik sorunlarindan
-  #    tamamen kacinmis oluyoruz.
-  # ------------------------------------------------------------------ #
   renode-integration-tests:
     name: Renode Integration Tests
     runs-on: ubuntu-latest
@@ -71,27 +55,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: .elf artifact'ini indir
+      - name: Download .elf artifact
         uses: actions/download-artifact@v4
         with:
           name: firmware-elf
           path: firmware-artifact
 
-      - name: Renode'u kur (portable, .NET dahil)
+      - name: Install Renode (portable, bundled .NET)
         run: |
           wget -q https://builds.renode.io/renode-latest.linux-portable-dotnet.tar.gz
           mkdir renode_portable
           tar xf renode-latest.linux-portable-dotnet.tar.gz -C renode_portable --strip-components=1
           echo "$PWD/renode_portable" >> "$GITHUB_PATH"
 
-      - name: Python bagimliliklarini kur
+      - name: Install Python dependencies
         run: pip install -r python/requirements.txt
 
-      - name: Integration testlerini calistir
+      - name: Run integration tests
         run: |
-          # .elf dosyasinin gercek adini bul (proje adina gore degisebilir)
           ELF_FILE=$(find firmware-artifact -name '*.elf' | head -n1)
-          echo "Bulunan .elf: $ELF_FILE"
+          echo "Found .elf: $ELF_FILE"
           export STM32_ELF="$PWD/$ELF_FILE"
           cd python
           pytest -v test_integration.py
