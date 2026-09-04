@@ -1,0 +1,25 @@
+# .clang-format
+#
+# Consistent code style across the project. Applied to lib/ads1x1x/
+# and, where relevant, other C source files.
+#
+# Usage (to format a file):
+#   clang-format -i lib/ads1x1x/inc/ads1x1x.h lib/ads1x1x/src/ads1x1x.c
+
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
+BreakBeforeBraces: Allman        # opening brace on its own line (common in embedded C)
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: true
+
+PointerAlignment: Right          # int *p  (right-aligned, C convention)
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+IndentCaseLabels: true
+
+SortIncludes: false              # STM32 header order can matter, auto-sort disabled
