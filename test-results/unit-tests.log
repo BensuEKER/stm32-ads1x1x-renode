@@ -4,7 +4,7 @@ $ ceedling test:all
  > Working directory: /home/administrator/projects/stm32-repo
 ℹ️ NOTICE: Enabled :test_runner ↳ :cmdline_args because :project ↳ :use_backtrace is enabled.
 
-Ceedling set up completed in 236 milliseconds
+Ceedling set up completed in 206 milliseconds
 
 👟 Preparing Build Paths...
 
@@ -66,4 +66,4 @@ PASSED:  15
 FAILED:   0
 IGNORED:  0
 
-Ceedling operations completed in 722 milliseconds
+Ceedling operations completed in 778 milliseconds

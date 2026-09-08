@@ -1,5 +1,5 @@
 :name: STM32F407VG_ADS1115
-:description: STM32F407VG + ADS1115 (I2C1) - boot test scripti (Gorev 4)
+:description: STM32F407VG + ADS1115 (I2C1) - boot test script (Görev 4)
 
 using sysbus
 
@@ -8,12 +8,12 @@ mach create $name
 
 machine LoadPlatformDescription @renode/platform.repl
 
-# NOT: Debug klasorundeki .elf dosyanin gercek yolunu buraya yaz.
-# Ornek: STM32F407VG_ADS1115/Debug/STM32F407VG_ADS1115.elf
-$bin?=@/mnt/c/Users/Administrator/Desktop/STM32F407VG_ADS1115/Debug/STM32F407VG_ADS1115.elf
+# The .elf is built by CMake into build/ (relative to the repo root --
+# run this script FROM the repo root, e.g. `renode renode/boot_test.resc`).
+$bin?=@build/STM32F407VG_ADS1x1x.elf
 
-# Gorev1'de sectigimiz haberlesme peripheral'i USART1 idi, o yuzden
-# UART ciktisini usart1 uzerinden izliyoruz (usart2 degil).
+# Görev 1: the chosen communication peripheral is USART1, so that's what
+# we watch for UART output (not usart2).
 showAnalyzer sysbus.usart1
 
 macro reset
