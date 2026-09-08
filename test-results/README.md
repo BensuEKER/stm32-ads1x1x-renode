@@ -4,6 +4,10 @@ This folder holds the exact terminal output (command + result) from the
 project's build and test pipeline, so a reviewer can see precisely what
 was run and what it produced without having to run anything themselves.
 
+**Full combined output is also published as a GitHub Gist for quick
+viewing without cloning the repo:**
+https://gist.github.com/BensuEKER/adbdbd26cdc26da2f985d9304a7b8808
+
 ## How these files are generated
 
 Run, from the repository root:
@@ -24,6 +28,3 @@ you also see it live in your terminal).
   `cmake --build --preset debug` (Görev 3/9 firmware build)
 - `renode-integration-tests.log` — output of `pytest -v test_integration.py`
   (Görev 8 integration tests, driving a real Renode simulation)
-
-These logs are also mirrored to a GitHub Gist for quick viewing without
-cloning the repo — see the link in the main README.
