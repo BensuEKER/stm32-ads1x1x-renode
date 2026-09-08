@@ -1,0 +1,16 @@
+$ cd python && pytest -v test_integration.py
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/administrator/projects/stm32-repo/python
+plugins: typeguard-4.4.4
+collecting ... collected 6 items
+
+test_integration.py::test_sensor_initialization PASSED                   [ 16%]
+test_integration.py::test_sensor_configuration PASSED                    [ 33%]
+test_integration.py::test_sensor_register_read PASSED                    [ 50%]
+test_integration.py::test_sensor_register_write PASSED                   [ 66%]
+test_integration.py::test_sensor_measurement PASSED                      [ 83%]
+test_integration.py::test_sensor_invalid_configuration PASSED            [100%]
+
+========================= 6 passed in 80.57s (0:01:20) =========================

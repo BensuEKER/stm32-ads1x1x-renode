@@ -1,0 +1,7 @@
+$ cmake --preset debug
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/administrator/projects/stm32-repo/build
+
+$ cmake --build --preset debug
+[100%] Built target STM32F407VG_ADS1x1x

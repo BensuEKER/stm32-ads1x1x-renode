@@ -1,0 +1,69 @@
+$ ceedling test:all
+🚧 Loaded project configuration from working directory.
+ > Using: /home/administrator/projects/stm32-repo/project.yml
+ > Working directory: /home/administrator/projects/stm32-repo
+ℹ️ NOTICE: Enabled :test_runner ↳ :cmdline_args because :project ↳ :use_backtrace is enabled.
+
+Ceedling set up completed in 236 milliseconds
+
+👟 Preparing Build Paths...
+
+👟 Collecting Essential Test Context
+------------------------------------
+Parsing test_ads1x1x.c for user & system #includes (fallback for preprocessing failures)...
+Parsing test_ads1x1x.c for include path build directive macros...
+Parsing test_ads1x1x.c for Partials directive macros...
+
+👟 Ingesting Test Configurations
+--------------------------------
+Collecting search paths, flags, and defines for test_ads1x1x.c...
+
+👟 Collecting More Test Context
+-------------------------------
+Skipping preprocessing for #includes in favor of cached #includes for test_ads1x1x.c...
+
+👟 Determining Files to Be Generated...
+
+👟 Mocking
+----------
+
+👟 Preprocessing Test Files
+---------------------------
+Preprocessing test file test_ads1x1x.c...
+Parsing test_ads1x1x.c for test source directive macros...
+
+👟 Collecting More Test Context
+-------------------------------
+Parsing test case names test_ads1x1x.c...
+
+👟 Test Runners
+---------------
+Generating runner for test_ads1x1x.c...
+
+👟 Determining Artifacts to Be Built...
+
+👟 Building Objects
+-------------------
+Compiling test_ads1x1x.c...
+Compiling test_ads1x1x::ads1x1x.c...
+Compiling test_ads1x1x::test_ads1x1x_runner.c...
+Compiling test_ads1x1x::unity.c...
+Compiling test_ads1x1x::fake_i2c.c...
+
+👟 Building Test Executables
+----------------------------
+Linking test_ads1x1x.out...
+
+👟 Executing
+------------
+Running test_ads1x1x.out...
+
+-----------------------
+✅ OVERALL TEST SUMMARY
+-----------------------
+TESTED:  15
+PASSED:  15
+FAILED:   0
+IGNORED:  0
+
+Ceedling operations completed in 722 milliseconds
