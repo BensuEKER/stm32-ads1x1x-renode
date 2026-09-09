@@ -13,4 +13,4 @@ test_integration.py::test_sensor_register_write PASSED                   [ 66%]
 test_integration.py::test_sensor_measurement PASSED                      [ 83%]
 test_integration.py::test_sensor_invalid_configuration PASSED            [100%]
 
-========================= 6 passed in 78.91s (0:01:18) =========================
+========================= 6 passed in 74.74s (0:01:14) =========================

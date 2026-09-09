@@ -12,9 +12,10 @@
 //   - Config register (OS/MUX/PGA/MODE/DR/COMP_*) read/write
 //   - Lo/Hi threshold register read/write
 //   - Conversion register: based on the "SimulatedVoltageMilliVolts"
-//     property, a REAL ADC code is computed according to the selected
-//     PGA range and the variant's resolution (12-bit/16-bit) -- not a
-//     fixed/constant value.
+//     property (or a random value within a configured range -- see the
+//     constructor), a REAL ADC code is computed according to the
+//     selected PGA range and the variant's resolution (12-bit/16-bit) --
+//     not a fixed/constant value.
 //   - Writing the OS bit "starts a conversion"; on read it always
 //     appears ready (1), since I2C transactions in Renode complete
 //     instantly (a reasonable simplification for this environment).
@@ -42,13 +43,28 @@ namespace Antmicro.Renode.Peripherals.Sensors
         /// <see cref="Antmicro.Renode.Exceptions.ConstructionException"/>
         /// with a clear message rather than failing silently.
         /// </param>
-        public ADS1x1x(string variant = "ADS1115")
+        /// <param name="minVoltageMilliVolts">
+        /// Optional. If set together with <paramref name="maxVoltageMilliVolts"/>
+        /// to a range where max &gt; min, the model picks a NEW random
+        /// voltage (in millivolts) within [min, max] every time the
+        /// Conversion register is read, instead of using a fixed value.
+        /// Leave both at their default (0) to keep the previous behavior:
+        /// a fixed value set via the <see cref="SimulatedVoltageMilliVolts"/>
+        /// property (e.g. from the monitor or from a test script).
+        /// </param>
+        /// <param name="maxVoltageMilliVolts">See <paramref name="minVoltageMilliVolts"/>.</param>
+        public ADS1x1x(string variant = "ADS1115", double minVoltageMilliVolts = 0.0,
+                        double maxVoltageMilliVolts = 0.0)
         {
             if (!Enum.TryParse(variant, true, out this.variant))
             {
                 throw new Antmicro.Renode.Exceptions.ConstructionException(
                     $"Unknown ADS1x1x variant: '{variant}'. Valid values: ADS1014, ADS1015, ADS1115.");
             }
+
+            this.minSimulatedVoltageMilliVolts = (decimal)minVoltageMilliVolts;
+            this.maxSimulatedVoltageMilliVolts = (decimal)maxVoltageMilliVolts;
+            this.randomizeVoltage = this.maxSimulatedVoltageMilliVolts > this.minSimulatedVoltageMilliVolts;
 
             RegistersCollection = new WordRegisterCollection(this);
             DefineRegisters();
@@ -155,10 +171,15 @@ namespace Antmicro.Renode.Peripherals.Sensors
         public WordRegisterCollection RegistersCollection { get; }
 
         /// <summary>
-        /// The voltage (in millivolts) the model should currently report on
-        /// the analog input. Intended for use from Renode's monitor or from
-        /// test automation, e.g.:
+        /// The voltage (in millivolts) the model currently reports on the
+        /// analog input. Settable from Renode's monitor or from test
+        /// automation, e.g.:
         /// <c>sysbus.i2c1.ads1x1x SimulatedVoltageMilliVolts 1250</c>
+        /// If a random range was configured via the constructor
+        /// (<see cref="ADS1x1x(string, double, double)"/>), this value is
+        /// overwritten with a fresh random sample on every Conversion
+        /// register read; the getter still returns whatever value was most
+        /// recently used, which is useful for tests/logging.
         /// </summary>
         public decimal SimulatedVoltageMilliVolts
         {
@@ -222,12 +243,33 @@ namespace Antmicro.Renode.Peripherals.Sensors
         }
 
         /// <summary>
+        /// If a random voltage range was configured, picks a new random
+        /// value within [min, max] and stores it in
+        /// <see cref="simulatedVoltageMilliVolts"/>. Called once per
+        /// Conversion register read, so each read can return a different
+        /// value.
+        /// </summary>
+        private void RandomizeVoltageIfConfigured()
+        {
+            if (!randomizeVoltage)
+            {
+                return;
+            }
+
+            var range = (double)(maxSimulatedVoltageMilliVolts - minSimulatedVoltageMilliVolts);
+            var sample = random.NextDouble() * range;
+            simulatedVoltageMilliVolts = minSimulatedVoltageMilliVolts + (decimal)sample;
+        }
+
+        /// <summary>
         /// Converts <see cref="simulatedVoltageMilliVolts"/> to an ADC code
         /// based on the selected PGA range and the variant's resolution
         /// (mirrors the "FSR" logic in the datasheet).
         /// </summary>
         private ushort ComputeConversionCode()
         {
+            RandomizeVoltageIfConfigured();
+
             var fsrMilliVolts = PgaFullScaleMilliVolts[(int)Math.Min(pgaField.Value, 5)];
             var fullScaleCode = IsSixteenBit(variant) ? 32768m : 2048m;
 
@@ -251,6 +293,10 @@ namespace Antmicro.Renode.Peripherals.Sensors
 
         private byte pointerRegister;
         private decimal simulatedVoltageMilliVolts;
+        private readonly decimal minSimulatedVoltageMilliVolts;
+        private readonly decimal maxSimulatedVoltageMilliVolts;
+        private readonly bool randomizeVoltage;
+        private readonly Random random = new Random();
         private IValueRegisterField muxField;
         private IValueRegisterField pgaField;
         private readonly Variant variant;
